@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: 'postgres:latest'
+    restart: 'always'
+    ports:
+      - '5432:5432'
+    environment:
+      - 'POSTGRES_DB=master'
+      - 'POSTGRES_PASSWORD=password'
+      - 'POSTGRES_USER=postgres'
+  redis:
+    image: 'redis:latest'
+    restart: 'always'
+    command: 'redis-server --notify-keyspace-events Ex'
+    ports:
+      - "6379:6379"

@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd"
+  objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+
+  <changeSet id="1692108526312-1" author="heybys (generated)">
+    <createTable tableName="authority">
+      <column autoIncrement="true" name="authority_id" type="BIGINT">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="pk_authority"/>
+      </column>
+      <column name="authority_name" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="priority" type="INT">
+        <constraints nullable="false"/>
+      </column>
+      <column name="created_by" type="VARCHAR(512)"/>
+      <column name="created_at" type="timestamp with time zone"/>
+      <column name="updated_by" type="VARCHAR(512)"/>
+      <column name="updated_at" type="timestamp with time zone"/>
+    </createTable>
+  </changeSet>
+
+  <changeSet id="1692108526312-2" author="heybys (generated)">
+    <createTable tableName="member">
+      <column autoIncrement="true" name="member_id" type="BIGINT">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="pk_member"/>
+      </column>
+      <column name="username" type="VARCHAR(512)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="password" type="VARCHAR(256)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="activated" type="BOOLEAN">
+        <constraints nullable="false"/>
+      </column>
+      <column name="created_by" type="VARCHAR(512)"/>
+      <column name="created_at" type="timestamp with time zone"/>
+      <column name="updated_by" type="VARCHAR(512)"/>
+      <column name="updated_at" type="timestamp with time zone"/>
+    </createTable>
+  </changeSet>
+
+  <changeSet id="1692108526312-3" author="heybys (generated)">
+    <createTable tableName="member_authority">
+      <column autoIncrement="true" name="member_authority_id" type="BIGINT">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="pk_member_authority"/>
+      </column>
+      <column name="member_id" type="BIGINT"/>
+      <column name="authority_id" type="BIGINT"/>
+      <column name="created_by" type="VARCHAR(512)"/>
+      <column name="created_at" type="timestamp with time zone"/>
+      <column name="updated_by" type="VARCHAR(512)"/>
+      <column name="updated_at" type="timestamp with time zone"/>
+    </createTable>
+  </changeSet>
+
+  <changeSet id="1692108526312-4" author="heybys (generated)">
+    <createTable tableName="post">
+      <column autoIncrement="true" name="post_id" type="BIGINT">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="pk_post"/>
+      </column>
+      <column name="title" type="VARCHAR(512)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="contents" type="VARCHAR(1024)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="created_by" type="VARCHAR(512)"/>
+      <column name="created_at" type="timestamp with time zone"/>
+      <column name="updated_by" type="VARCHAR(512)"/>
+      <column name="updated_at" type="timestamp with time zone"/>
+    </createTable>
+  </changeSet>
+
+  <changeSet id="1692108526312-5" author="heybys (generated)">
+    <createTable tableName="refresh_token">
+      <column name="key" type="VARCHAR(255)">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="pk_refreshtoken"/>
+      </column>
+      <column name="value" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="created_by" type="VARCHAR(512)"/>
+      <column name="created_at" type="timestamp with time zone"/>
+      <column name="updated_by" type="VARCHAR(512)"/>
+      <column name="updated_at" type="timestamp with time zone"/>
+    </createTable>
+  </changeSet>
+
+  <changeSet id="1692108526312-6" author="heybys (generated)">
+    <addUniqueConstraint columnNames="authority_name" constraintName="uc_authority_authority_name"
+      tableName="authority"/>
+  </changeSet>
+
+  <changeSet id="1692108526312-7" author="heybys (generated)">
+    <addUniqueConstraint columnNames="username" constraintName="uc_member_username"
+      tableName="member"/>
+  </changeSet>
+
+  <changeSet id="1692108526312-8" author="heybys (generated)">
+    <addForeignKeyConstraint baseColumnNames="authority_id" baseTableName="member_authority"
+      constraintName="FK_MEMBER_AUTHORITY_ON_AUTHORITY" referencedColumnNames="authority_id"
+      referencedTableName="authority"/>
+  </changeSet>
+
+  <changeSet id="1692108526312-9" author="heybys (generated)">
+    <addForeignKeyConstraint baseColumnNames="member_id" baseTableName="member_authority"
+      constraintName="FK_MEMBER_AUTHORITY_ON_MEMBER" referencedColumnNames="member_id"
+      referencedTableName="member"/>
+  </changeSet>
+
+</databaseChangeLog>
