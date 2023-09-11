@@ -7,8 +7,8 @@ import com.devtraining.systemdesign.jwt.JwtProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
@@ -44,12 +44,10 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http.authenticationManager(authenticationManager(http))
-                .authorizeHttpRequests(authz -> authz.requestMatchers("/api/auth/**")
+                .authorizeHttpRequests(authz -> authz.requestMatchers("/api/auth/**", "/error")
                         .permitAll()
                         .requestMatchers("/api/member/**")
                         .hasRole("ADMIN")
-                        .requestMatchers("/api/**")
-                        .hasAnyRole("USER", "ADMIN")
                         .anyRequest()
                         .authenticated())
                 .addFilterBefore(authenticationFilter(http), UsernamePasswordAuthenticationFilter.class)
@@ -60,7 +58,14 @@ public class SecurityConfig {
                 .anonymous(AbstractHttpConfigurer::disable)
                 .rememberMe(AbstractHttpConfigurer::disable)
                 .logout(AbstractHttpConfigurer::disable)
-                .exceptionHandling(Customizer.withDefaults())
+                .exceptionHandling(configurer -> configurer
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.sendError(
+                                    HttpStatus.UNAUTHORIZED.value(), HttpStatus.UNAUTHORIZED.getReasonPhrase());
+                        })
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            response.sendError(HttpStatus.FORBIDDEN.value(), HttpStatus.FORBIDDEN.getReasonPhrase());
+                        }))
                 .sessionManagement(configurer -> configurer.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
         return http.build();
