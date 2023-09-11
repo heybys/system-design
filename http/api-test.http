@@ -17,28 +17,29 @@ Content-Type: application/json
 }
 
 > {%
-client.global.set("authToken", response.body);
+client.global.set("accessToken", response.body.accessToken);
+client.global.set("refreshToken", response.body.refreshToken);
  %}
 
 ###
 GET http://localhost:8080/api/member
 Content-Type: application/json
-Authorization: Bearer {{authToken}}
+Authorization: Bearer {{accessToken}}
 
 ###
 GET http://localhost:8080/api/post
 Content-Type: application/json
-Authorization: Bearer {{authToken}}
+Authorization: Bearer {{accessToken}}
 
 ###
 GET http://localhost:8080/api/post/1
 Content-Type: application/json
-Authorization: Bearer {{authToken}}
+Authorization: Bearer {{accessToken}}
 
 ###
 POST http://localhost:8080/api/post
 Content-Type: application/json
-Authorization: Bearer {{authToken}}
+Authorization: Bearer {{accessToken}}
 
 {
   "title": "post",

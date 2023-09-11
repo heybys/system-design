@@ -1,5 +1,6 @@
 package com.devtraining.systemdesign.apis;
 
+import com.devtraining.systemdesign.auth.service.AuthInfo;
 import com.devtraining.systemdesign.auth.service.AuthService;
 import com.devtraining.systemdesign.auth.service.LoginRequest;
 import com.devtraining.systemdesign.auth.service.SignupRequest;
@@ -20,8 +21,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/auth")
 public class AuthController {
 
-    public static final String AUTHENTICATION_SCHEME_BEARER = "Bearer";
-
     private final AuthService authService;
 
     @PostMapping("/signup")
@@ -33,16 +32,14 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody LoginRequest loginRequest) {
-        String accessToken = authService.login(loginRequest);
-
-        return ResponseEntity.ok(accessToken);
+    public ResponseEntity<AuthInfo> login(@RequestBody LoginRequest loginRequest) {
+        AuthInfo authInfo = authService.login(loginRequest);
+        return ResponseEntity.ok(authInfo);
     }
 
     @GetMapping("/login")
-    public ResponseEntity<String> login(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorization) {
-        String accessToken = authService.login(authorization);
-
-        return ResponseEntity.ok(accessToken);
+    public ResponseEntity<AuthInfo> login(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorization) {
+        AuthInfo authInfo = authService.login(authorization);
+        return ResponseEntity.ok(authInfo);
     }
 }

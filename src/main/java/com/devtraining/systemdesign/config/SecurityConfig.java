@@ -8,8 +8,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -35,7 +37,7 @@ public class SecurityConfig {
 
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
-        return web -> web.ignoring();
+        return WebSecurity::ignoring;
     }
 
     @Bean
@@ -58,6 +60,7 @@ public class SecurityConfig {
                 .anonymous(AbstractHttpConfigurer::disable)
                 .rememberMe(AbstractHttpConfigurer::disable)
                 .logout(AbstractHttpConfigurer::disable)
+                .exceptionHandling(Customizer.withDefaults())
                 .sessionManagement(configurer -> configurer.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
         return http.build();
@@ -111,8 +114,7 @@ public class SecurityConfig {
     @Bean
     public JwtProvider jwtProvider() {
         return new JwtProvider(
-                24L * 60L * 60L * 1000L,
-                24L * 60L * 60L * 1000L,
-                "secretKey1234secretKey1234secretKey1234secretKey1234");
+                // 24L * 60L * 60L * 1000L,
+                10L * 1000L, 24L * 60L * 60L * 1000L, "secretKey1234secretKey1234secretKey1234secretKey1234");
     }
 }
