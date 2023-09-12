@@ -45,7 +45,8 @@ public class AuthService {
                     .authorityTypes(List.of(AuthorityType.ADMIN))
                     .build();
 
-            memberService.createMemberInfo(memberInfo);
+            Long memberId = memberService.createMemberInfo(memberInfo);
+            log.debug("Created admin. memberId: {}", memberId);
         }
     }
 
@@ -57,7 +58,8 @@ public class AuthService {
                 .authorityTypes(List.of(AuthorityType.USER))
                 .build();
 
-        memberService.createMemberInfo(memberInfo);
+        Long memberId = memberService.createMemberInfo(memberInfo);
+        log.debug("Created member. memberId: {}", memberId);
     }
 
     @Transactional
