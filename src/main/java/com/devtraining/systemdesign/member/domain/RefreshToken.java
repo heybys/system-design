@@ -1,4 +1,4 @@
-package com.devtraining.systemdesign.auth.domain;
+package com.devtraining.systemdesign.member.domain;
 
 import com.devtraining.systemdesign.generic.BaseEntity;
 import jakarta.persistence.Column;

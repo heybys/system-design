@@ -1,9 +1,9 @@
 package com.devtraining.systemdesign.apis;
 
-import com.devtraining.systemdesign.auth.service.AuthInfo;
-import com.devtraining.systemdesign.auth.service.AuthService;
-import com.devtraining.systemdesign.auth.service.LoginRequest;
-import com.devtraining.systemdesign.auth.service.SignupRequest;
+import com.devtraining.systemdesign.member.service.AuthInfo;
+import com.devtraining.systemdesign.member.service.AuthService;
+import com.devtraining.systemdesign.member.service.LoginRequest;
+import com.devtraining.systemdesign.member.service.SignupRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;

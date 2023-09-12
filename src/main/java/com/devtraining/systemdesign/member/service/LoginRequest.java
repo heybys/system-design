@@ -1,4 +1,4 @@
-package com.devtraining.systemdesign.auth.service;
+package com.devtraining.systemdesign.member.service;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 

@@ -3,7 +3,7 @@ POST http://localhost:8080/api/auth/signup
 Content-Type: application/json
 
 {
-  "username": "heybys",
+  "username": "normal",
   "password": "1q2w3e4r1!"
 }
 
@@ -12,7 +12,7 @@ POST http://localhost:8080/api/auth/login
 Content-Type: application/json
 
 {
-  "username": "heybys",
+  "username": "normal",
   "password": "1q2w3e4r1!"
 }
 
@@ -25,6 +25,17 @@ client.global.set("refreshToken", response.body.refreshToken);
 GET http://localhost:8080/api/member
 Content-Type: application/json
 Authorization: Bearer {{accessToken}}
+
+###
+POST http://localhost:8080/api/member
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "username": "tester",
+  "password": "1q2w3e4r1!",
+  "authorities": ["USER", "TESTER"]
+}
 
 ###
 GET http://localhost:8080/api/post

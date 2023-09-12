@@ -20,11 +20,12 @@ public class MemberService {
 
     @Transactional
     public Long createMemberInfo(MemberInfo memberInfo) {
-        Member encodedMember = memberInfo.toEncodedMember(passwordEncoder);
+        Member member = memberInfo.toMember();
+        member.encodePassword(passwordEncoder);
 
-        Member savedMember = memberRepository.save(encodedMember);
+        Member savedMember = memberRepository.save(member);
 
-        memberAuthorityService.grantAuthorities(savedMember, memberInfo.authorityNames());
+        memberAuthorityService.grantAuthorities(savedMember, memberInfo.authorityTypes());
 
         return savedMember.getId();
     }

@@ -18,11 +18,11 @@ public class MemberAuthorityService {
     private final MemberAuthorityRepository memberAuthorityRepository;
 
     @Transactional
-    public void grantAuthorities(Member member, List<String> authorityNames) {
-        authorityNames.forEach(authorityName -> {
+    public void grantAuthorities(Member member, List<AuthorityType> authorityTypes) {
+        authorityTypes.forEach(authorityType -> {
             Authority authority = authorityRepository
-                    .findByName(authorityName)
-                    .orElse(Authority.builder().name(authorityName).build());
+                    .findByName(authorityType.name())
+                    .orElse(Authority.builder().name(authorityType.name()).build());
 
             authorityRepository.save(authority);
 

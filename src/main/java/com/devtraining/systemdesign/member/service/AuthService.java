@@ -1,15 +1,14 @@
-package com.devtraining.systemdesign.auth.service;
+package com.devtraining.systemdesign.member.service;
 
 import com.devtraining.systemdesign.jwt.JwtProvider;
 import com.devtraining.systemdesign.member.domain.Authority;
-import com.devtraining.systemdesign.member.domain.AuthorityRepository;
 import com.devtraining.systemdesign.member.domain.Member;
 import com.devtraining.systemdesign.member.domain.MemberAuthority;
-import com.devtraining.systemdesign.member.domain.MemberAuthorityRepository;
 import com.devtraining.systemdesign.member.domain.MemberRepository;
 import jakarta.annotation.PostConstruct;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -31,9 +30,8 @@ public class AuthService {
 
     private final PasswordEncoder passwordEncoder;
 
+    private final MemberService memberService;
     private final MemberRepository memberRepository;
-    private final AuthorityRepository authorityRepository;
-    private final MemberAuthorityRepository memberAuthorityRepository;
 
     @PostConstruct
     public void init() {
@@ -41,21 +39,25 @@ public class AuthService {
         if (isAdminPresent) {
             log.debug("Admin has already been created");
         } else {
-            Member admin = Member.builder().username("admin").password("admin").build();
-            admin.encodePassword(passwordEncoder);
-            memberRepository.save(admin);
+            MemberInfo memberInfo = MemberInfo.builder()
+                    .username("admin")
+                    .rawPassword("admin")
+                    .authorityTypes(List.of(AuthorityType.ADMIN))
+                    .build();
 
-            grantAuthority(admin, AuthorityType.ADMIN);
+            memberService.createMemberInfo(memberInfo);
         }
     }
 
     @Transactional
     public void signup(SignupRequest signupRequest) {
-        Member member = signupRequest.toMember();
-        member.encodePassword(passwordEncoder);
-        memberRepository.save(member);
+        MemberInfo memberInfo = MemberInfo.builder()
+                .username(signupRequest.username())
+                .rawPassword(signupRequest.rawPassword())
+                .authorityTypes(List.of(AuthorityType.USER))
+                .build();
 
-        grantAuthority(member, AuthorityType.USER);
+        memberService.createMemberInfo(memberInfo);
     }
 
     @Transactional
@@ -114,17 +116,5 @@ public class AuthService {
         } catch (IllegalArgumentException ex) {
             throw new BadCredentialsException("Failed to decode basic authentication token");
         }
-    }
-
-    private void grantAuthority(Member member, AuthorityType authorityType) {
-        Authority defaultAuthority =
-                Authority.builder().name(authorityType.name()).build();
-        Authority authority =
-                authorityRepository.findByName(authorityType.name()).orElse(defaultAuthority);
-        authorityRepository.save(authority);
-
-        MemberAuthority memberAuthority =
-                MemberAuthority.builder().member(member).authority(authority).build();
-        memberAuthorityRepository.save(memberAuthority);
     }
 }
