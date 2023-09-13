@@ -19,29 +19,29 @@ public class MemberService {
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
-    public Long createMemberInfo(MemberInfo memberInfo) {
-        Member member = memberInfo.toMember();
+    public Long createMember(MemberDto memberDto) {
+        Member member = memberDto.toEntity();
         member.encodePassword(passwordEncoder);
 
         Member savedMember = memberRepository.save(member);
 
-        memberAuthorityService.grantAuthorities(savedMember, memberInfo.authorityTypes());
+        memberAuthorityService.grantAuthorities(savedMember, memberDto.authorityTypes());
 
         return savedMember.getId();
     }
 
     @Transactional(readOnly = true)
-    public List<MemberInfo> retrieveAllMemberInfos() {
+    public List<MemberDto> retrieveAllMembers() {
         return memberRepository.findAllWithAuthority().stream()
-                .map(MemberInfo::of)
+                .map(MemberDto::of)
                 .toList();
     }
 
     @Transactional(readOnly = true)
-    public MemberInfo retrieveMemberInfo(Long memberId) {
+    public MemberDto retrieveMember(Long memberId) {
         Member member = memberRepository.findWithAuthorityById(memberId).orElseThrow();
 
-        return MemberInfo.of(member);
+        return MemberDto.of(member);
     }
 
     @Transactional

@@ -9,7 +9,9 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -38,7 +40,7 @@ public class Member extends BaseEntity {
     private boolean activated = true;
 
     @OneToMany(mappedBy = "member", fetch = FetchType.LAZY)
-    private final List<MemberAuthority> memberAuthorities = new ArrayList<>();
+    private final Set<MemberAuthority> memberAuthorities = new HashSet<>();
 
     @Builder
     public Member(String username, String password) {
@@ -48,10 +50,6 @@ public class Member extends BaseEntity {
 
     public void addMemberAuthority(MemberAuthority memberAuthority) {
         this.memberAuthorities.add(memberAuthority);
-    }
-
-    public void removeMemberAuthority(MemberAuthority memberAuthority) {
-        this.memberAuthorities.remove(memberAuthority);
     }
 
     public void activate(boolean flag) {

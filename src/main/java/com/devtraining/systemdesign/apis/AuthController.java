@@ -36,10 +36,4 @@ public class AuthController {
         AuthInfo authInfo = authService.login(loginRequest);
         return ResponseEntity.ok(authInfo);
     }
-
-    @GetMapping("/login")
-    public ResponseEntity<AuthInfo> login(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorization) {
-        AuthInfo authInfo = authService.login(authorization);
-        return ResponseEntity.ok(authInfo);
-    }
 }

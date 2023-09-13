@@ -16,21 +16,21 @@ public class PostService {
     private final PostRepository postRepository;
 
     @Transactional
-    public Long createPostInfo(PostInfo postInfo) {
-        Post savedPost = postRepository.save(postInfo.toEntity());
+    public Long createPost(PostDto postDto) {
+        Post savedPost = postRepository.save(postDto.toEntity());
 
         return savedPost.getId();
     }
 
     @Transactional(readOnly = true)
-    public List<PostInfo> retrieveAllPostInfos() {
-        return postRepository.findAllWithComments().stream().map(PostInfo::of).toList();
+    public List<PostDto> retrieveAllPosts() {
+        return postRepository.findAllWithComments().stream().map(PostDto::of).toList();
     }
 
     @Transactional(readOnly = true)
-    public PostInfo retrievePostInfo(Long postId) {
+    public PostDto retrievePost(Long postId) {
         Post post = postRepository.findWithCommentsById(postId).orElseThrow();
 
-        return PostInfo.of(post);
+        return PostDto.of(post);
     }
 }

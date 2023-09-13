@@ -9,13 +9,13 @@ import java.util.List;
 import lombok.Builder;
 
 @Builder
-public record MemberInfo(
+public record MemberDto(
         @JsonProperty("username") String username,
         @JsonIgnore @JsonProperty("password") String rawPassword,
         @JsonProperty("authorities") List<AuthorityType> authorityTypes) {
 
-    public static MemberInfo of(Member member) {
-        return new MemberInfo(
+    public static MemberDto of(Member member) {
+        return new MemberDto(
                 member.getUsername(),
                 member.getPassword(),
                 member.getMemberAuthorities().stream()
@@ -25,7 +25,7 @@ public record MemberInfo(
                         .toList());
     }
 
-    public Member toMember() {
+    public Member toEntity() {
         return Member.builder().username(username).password(rawPassword).build();
     }
 }

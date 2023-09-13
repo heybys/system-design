@@ -32,6 +32,8 @@ public class MemberAuthorityService {
                     .build();
 
             memberAuthorityRepository.save(memberAuthority);
+
+            member.addMemberAuthority(memberAuthority);
         });
     }
 }

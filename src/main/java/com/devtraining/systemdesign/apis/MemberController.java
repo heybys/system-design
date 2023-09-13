@@ -1,6 +1,6 @@
 package com.devtraining.systemdesign.apis;
 
-import com.devtraining.systemdesign.member.service.MemberInfo;
+import com.devtraining.systemdesign.member.service.MemberDto;
 import com.devtraining.systemdesign.member.service.MemberService;
 import java.net.URI;
 import java.util.List;
@@ -21,9 +21,9 @@ public class MemberController {
     private final MemberService memberService;
 
     @PostMapping()
-    public ResponseEntity<String> createMemberInfo(@RequestBody MemberInfo memberInfo) {
+    public ResponseEntity<String> createMember(@RequestBody MemberDto memberDto) {
 
-        Long savedMemberId = memberService.createMemberInfo(memberInfo);
+        Long savedMemberId = memberService.createMember(memberDto);
 
         URI location = URI.create("/api/member/" + savedMemberId);
 
@@ -31,18 +31,18 @@ public class MemberController {
     }
 
     @GetMapping()
-    public ResponseEntity<List<MemberInfo>> retrieveAllMemberInfos() {
+    public ResponseEntity<List<MemberDto>> retrieveAllMembers() {
 
-        List<MemberInfo> memberInfos = memberService.retrieveAllMemberInfos();
+        List<MemberDto> memberDtos = memberService.retrieveAllMembers();
 
-        return ResponseEntity.ok(memberInfos);
+        return ResponseEntity.ok(memberDtos);
     }
 
     @GetMapping("/{memberId}")
-    public ResponseEntity<MemberInfo> retrieveMemberInfo(@PathVariable Long memberId) {
+    public ResponseEntity<MemberDto> retrieveMember(@PathVariable Long memberId) {
 
-        MemberInfo memberInfo = memberService.retrieveMemberInfo(memberId);
+        MemberDto memberDto = memberService.retrieveMember(memberId);
 
-        return ResponseEntity.ok(memberInfo);
+        return ResponseEntity.ok(memberDto);
     }
 }

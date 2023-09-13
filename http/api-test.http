@@ -40,12 +40,10 @@ Authorization: Bearer {{accessToken}}
 ###
 GET http://localhost:8080/api/post
 Content-Type: application/json
-Authorization: Bearer {{accessToken}}
 
 ###
 GET http://localhost:8080/api/post/1
 Content-Type: application/json
-Authorization: Bearer {{accessToken}}
 
 ###
 POST http://localhost:8080/api/post
@@ -54,5 +52,5 @@ Authorization: Bearer {{accessToken}}
 
 {
   "title": "post",
-  "contents": "hello my name is Jero"
+  "contents": "Post Test"
 }

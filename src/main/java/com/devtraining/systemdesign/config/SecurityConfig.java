@@ -4,9 +4,11 @@ import com.devtraining.systemdesign.jwt.JwtAuthenticationConverter;
 import com.devtraining.systemdesign.jwt.JwtAuthenticationFilter;
 import com.devtraining.systemdesign.jwt.JwtAuthenticationProvider;
 import com.devtraining.systemdesign.jwt.JwtProvider;
+import java.time.Duration;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -45,7 +47,11 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http.authenticationManager(authenticationManager(http))
-                .authorizeHttpRequests(authz -> authz.requestMatchers("/api/auth/**", "/error")
+                .authorizeHttpRequests(authz -> authz.requestMatchers("/api/auth/**")
+                        .permitAll()
+                        .requestMatchers(HttpMethod.GET, "/error")
+                        .permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/post/**")
                         .permitAll()
                         .requestMatchers("/api/member/**")
                         .hasRole("ADMIN")
@@ -120,8 +126,8 @@ public class SecurityConfig {
 
     @Bean
     public JwtProvider jwtProvider() {
-        long accessTokenExpirationTime = 30L * 60L * 1000L;
-        long refreshTokenExpirationTime = 24L * 60L * 60L * 1000L;
+        long accessTokenExpirationTime = Duration.ofMinutes(30).toMillis();
+        long refreshTokenExpirationTime = Duration.ofDays(14).toMillis();
         String secretKey = "secretKey1234secretKey1234secretKey1234secretKey1234";
 
         return new JwtProvider(accessTokenExpirationTime, refreshTokenExpirationTime, secretKey);

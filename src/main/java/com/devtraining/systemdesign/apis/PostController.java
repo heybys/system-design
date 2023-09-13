@@ -1,7 +1,6 @@
 package com.devtraining.systemdesign.apis;
 
-import com.devtraining.systemdesign.post.domain.Post;
-import com.devtraining.systemdesign.post.service.PostInfo;
+import com.devtraining.systemdesign.post.service.PostDto;
 import com.devtraining.systemdesign.post.service.PostService;
 import java.net.URI;
 import java.util.List;
@@ -24,9 +23,9 @@ public class PostController {
     private final PostService postService;
 
     @PostMapping()
-    public ResponseEntity<PostInfo> createPost(@RequestBody PostInfo postInfo) {
+    public ResponseEntity<PostDto> createPost(@RequestBody PostDto postDto) {
 
-        Long savedPostId = postService.createPostInfo(postInfo);
+        Long savedPostId = postService.createPost(postDto);
 
         URI savedPostUri = URI.create("/post/" + savedPostId);
 
@@ -34,18 +33,18 @@ public class PostController {
     }
 
     @GetMapping()
-    public ResponseEntity<List<PostInfo>> retrieveAllPostInfos() {
+    public ResponseEntity<List<PostDto>> retrieveAllPosts() {
 
-        List<PostInfo> postInfos = postService.retrieveAllPostInfos();
+        List<PostDto> postDtos = postService.retrieveAllPosts();
 
-        return ResponseEntity.ok(postInfos);
+        return ResponseEntity.ok(postDtos);
     }
 
     @GetMapping("/{postId}")
-    public ResponseEntity<PostInfo> retrievePostInfo(@PathVariable Long postId) {
+    public ResponseEntity<PostDto> retrievePost(@PathVariable Long postId) {
 
-        PostInfo postInfo = postService.retrievePostInfo(postId);
+        PostDto postDto = postService.retrievePost(postId);
 
-        return ResponseEntity.ok(postInfo);
+        return ResponseEntity.ok(postDto);
     }
 }
