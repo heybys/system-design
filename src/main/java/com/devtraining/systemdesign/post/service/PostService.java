@@ -24,12 +24,12 @@ public class PostService {
 
     @Transactional(readOnly = true)
     public List<PostInfo> retrieveAllPostInfos() {
-        return postRepository.findAll().stream().map(PostInfo::of).toList();
+        return postRepository.findAllWithComments().stream().map(PostInfo::of).toList();
     }
 
     @Transactional(readOnly = true)
     public PostInfo retrievePostInfo(Long postId) {
-        Post post = postRepository.findById(postId).orElseThrow();
+        Post post = postRepository.findWithCommentsById(postId).orElseThrow();
 
         return PostInfo.of(post);
     }

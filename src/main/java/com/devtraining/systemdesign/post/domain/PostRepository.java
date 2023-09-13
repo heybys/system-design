@@ -7,6 +7,9 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface PostRepository extends JpaRepository<Post, Long> {
+    @Query("select p from post p join fetch p.comments")
+    Optional<Post> findAllWithComments();
+
     @Query("select p from post p join fetch p.comments where p.id = :postId")
     Optional<Post> findWithCommentsById(Long postId);
 }
