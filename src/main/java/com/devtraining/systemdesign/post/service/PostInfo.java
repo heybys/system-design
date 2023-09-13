@@ -1,14 +1,13 @@
 package com.devtraining.systemdesign.post.service;
 
 import com.devtraining.systemdesign.post.domain.Post;
-import com.devtraining.systemdesign.post.domain.PostComment;
 import java.util.List;
 
-public record PostInfo(String title, String contents, List<String> comments) {
+public record PostInfo(String title, String contents, List<PostCommentInfo> comments) {
 
     public static PostInfo of(Post post) {
-        List<String> comments =
-                post.getComments().stream().map(PostComment::getText).toList();
+        List<PostCommentInfo> comments =
+                post.getComments().stream().map(PostCommentInfo::of).toList();
         return new PostInfo(post.getTitle(), post.getContents(), comments);
     }
 
