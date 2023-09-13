@@ -109,8 +109,10 @@ public class SecurityConfig {
 
     @Bean
     public AuthenticationFilter authenticationFilter(HttpSecurity http) throws Exception {
-        JwtAuthenticationFilter filter =
-                new JwtAuthenticationFilter(authenticationManager(http), new JwtAuthenticationConverter(jwtProvider()));
+        AuthenticationManager authenticationManager = authenticationManager(http);
+        JwtAuthenticationConverter authenticationConverter = new JwtAuthenticationConverter(jwtProvider());
+
+        JwtAuthenticationFilter filter = new JwtAuthenticationFilter(authenticationManager, authenticationConverter);
 
         filter.setSuccessHandler((request, response, authentication) -> {});
         return filter;
@@ -118,8 +120,10 @@ public class SecurityConfig {
 
     @Bean
     public JwtProvider jwtProvider() {
-        return new JwtProvider(
-                // 24L * 60L * 60L * 1000L,
-                10L * 1000L, 24L * 60L * 60L * 1000L, "secretKey1234secretKey1234secretKey1234secretKey1234");
+        long accessTokenExpirationTime = 30L * 60L * 1000L;
+        long refreshTokenExpirationTime = 24L * 60L * 60L * 1000L;
+        String secretKey = "secretKey1234secretKey1234secretKey1234secretKey1234";
+
+        return new JwtProvider(accessTokenExpirationTime, refreshTokenExpirationTime, secretKey);
     }
 }
