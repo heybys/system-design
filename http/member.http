@@ -1,0 +1,15 @@
+### Member 전체 조회
+GET http://localhost:8080/api/member
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+### Member 생성
+POST http://localhost:8080/api/member
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "username": "tester",
+  "password": "1q2w3e4r1!",
+  "authorities": ["USER", "TESTER"]
+}
