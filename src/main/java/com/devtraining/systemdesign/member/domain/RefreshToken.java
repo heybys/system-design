@@ -1,27 +1,37 @@
 package com.devtraining.systemdesign.member.domain;
 
-import com.devtraining.systemdesign.generic.BaseEntity;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
+import java.time.Duration;
+import java.time.OffsetDateTime;
+import java.util.concurrent.TimeUnit;
 import lombok.AccessLevel;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.redis.core.RedisHash;
+import org.springframework.data.redis.core.TimeToLive;
 
-@Entity
+@Getter
+@RedisHash(value = "refreshToken")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class RefreshToken extends BaseEntity {
+public class RefreshToken {
 
     @Id
     private String key;
 
-    @Column(nullable = false)
     private String value;
 
+    @TimeToLive(unit = TimeUnit.MILLISECONDS)
+    private Long ttl;
+
+    private OffsetDateTime createdAt;
+
     @Builder
-    public RefreshToken(String key, String value) {
+    public RefreshToken(String key, String value, Duration ttl) {
         this.key = key;
         this.value = value;
+        this.ttl = TimeUnit.MILLISECONDS.convert(ttl);
+        this.createdAt = OffsetDateTime.now();
     }
 
     public void update(String value) {

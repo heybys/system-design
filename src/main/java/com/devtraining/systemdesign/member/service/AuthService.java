@@ -5,6 +5,8 @@ import com.devtraining.systemdesign.member.domain.Authority;
 import com.devtraining.systemdesign.member.domain.Member;
 import com.devtraining.systemdesign.member.domain.MemberAuthority;
 import com.devtraining.systemdesign.member.domain.MemberRepository;
+import com.devtraining.systemdesign.member.domain.RefreshToken;
+import com.devtraining.systemdesign.member.domain.RefreshTokenRepository;
 import jakarta.annotation.PostConstruct;
 import java.time.Duration;
 import java.util.List;
@@ -30,6 +32,8 @@ public class AuthService {
 
     private final MemberService memberService;
     private final MemberRepository memberRepository;
+
+    private final RefreshTokenRepository refreshTokenRepository;
 
     @PostConstruct
     public void init() {
@@ -81,6 +85,13 @@ public class AuthService {
 
         String accessToken = jwtProvider.createAccessToken(username, authorities, accessTokenTtl);
         String refreshToken = jwtProvider.createRefreshToken(username, authorities, refreshTokenTtl);
+
+        RefreshToken refreshTokenEntity = RefreshToken.builder()
+                .key(username)
+                .value(refreshToken)
+                .ttl(refreshTokenTtl)
+                .build();
+        refreshTokenRepository.save(refreshTokenEntity);
 
         return new AuthInfo(accessToken, refreshToken);
     }
