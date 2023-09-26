@@ -1,29 +1,43 @@
 package com.devtraining.systemdesign.config;
 
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.data.redis.RedisProperties;
+import org.springframework.boot.autoconfigure.data.redis.RedisProperties.Lettuce;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
-import org.springframework.data.redis.serializer.StringRedisSerializer;
-import org.springframework.session.data.redis.config.annotation.web.http.EnableRedisHttpSession;
+import org.springframework.context.annotation.FilterType;
+import org.springframework.data.keyvalue.repository.KeyValueRepository;
+import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
 
+@Slf4j
+@EnableRedisRepositories(
+        basePackages = "com.devtraining.systemdesign.**.domain",
+        includeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = KeyValueRepository.class))
 @Configuration
-@EnableRedisHttpSession
 public class RedisConfig {
 
-    @Bean
-    public RedisConnectionFactory redisConnectionFactory() {
-        return new LettuceConnectionFactory();
+    @ConfigurationProperties("spring.data.redis")
+    public RedisProperties redisProperties() {
+        return new RedisProperties();
     }
 
     @Bean
-    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
-        RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
-        redisTemplate.setKeySerializer(new StringRedisSerializer());
-        redisTemplate.setValueSerializer(new GenericJackson2JsonRedisSerializer());
-        redisTemplate.setConnectionFactory(connectionFactory);
-        return redisTemplate;
+    public Lettuce lettuce() {
+        return redisProperties().getLettuce();
     }
+
+    // @Component
+    // public static class RefreshTokenExpiredEventListener {
+    //     @EventListener
+    //     public void handleRedisKeyExpiredEvent(RedisKeyExpiredEvent<RefreshToken> event) {
+    //         RefreshToken expiredRefreshToken = (RefreshToken) event.getValue();
+    //         assert expiredRefreshToken != null;
+    //
+    //         String key = expiredRefreshToken.getKey();
+    //         String value = expiredRefreshToken.getValue();
+    //         log.info("RefreshToken with key={}, value={} has expired", key, value);
+    //     }
+    // }
 }
