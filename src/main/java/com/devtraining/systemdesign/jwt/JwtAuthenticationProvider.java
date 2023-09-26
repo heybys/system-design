@@ -51,8 +51,6 @@ public class JwtAuthenticationProvider implements AuthenticationProvider, Initia
         Assert.isInstanceOf(
                 JwtAuthenticationToken.class, authentication, () -> "Only JwtAuthenticationToken is supported");
 
-        JwtAuthenticationToken jwtAuthenticationToken = (JwtAuthenticationToken) authentication;
-
         if (authentication.getCredentials() == null) {
             log.debug("Failed to authenticate since no credentials provided");
             throw new BadCredentialsException(BAD_CREDENTIALS);
@@ -124,9 +122,7 @@ public class JwtAuthenticationProvider implements AuthenticationProvider, Initia
                         "UserDetailsService returned null, which is an interface contract violation");
             }
             return loadedUser;
-        } catch (UsernameNotFoundException ex) {
-            throw ex;
-        } catch (InternalAuthenticationServiceException ex) {
+        } catch (UsernameNotFoundException | InternalAuthenticationServiceException ex) {
             throw ex;
         } catch (Exception ex) {
             throw new InternalAuthenticationServiceException(ex.getMessage(), ex);
