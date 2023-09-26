@@ -1,9 +1,11 @@
 package com.devtraining.systemdesign.jwt;
 
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jws;
+import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.cache.concurrent.ConcurrentMapCache;
 import org.springframework.security.authentication.AccountExpiredException;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -14,12 +16,13 @@ import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMapper;
+import org.springframework.security.core.authority.mapping.SimpleAuthorityMapper;
 import org.springframework.security.core.userdetails.UserCache;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsChecker;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.core.userdetails.cache.SpringCacheBasedUserCache;
+import org.springframework.security.core.userdetails.cache.NullUserCache;
 import org.springframework.util.Assert;
 
 @Slf4j
@@ -30,17 +33,18 @@ public class JwtAuthenticationProvider implements AuthenticationProvider, Initia
 
     private final boolean hideUserNotFoundExceptions = true;
 
-    private final UserCache userCache = new SpringCacheBasedUserCache(new ConcurrentMapCache("userCache"));
+    // private final UserCache userCache = new SpringCacheBasedUserCache(new ConcurrentMapCache("userCache"));
+    private final UserCache userCache = new NullUserCache();
 
     private final UserDetailsChecker preAuthenticationChecks = new DefaultPreAuthenticationChecks();
 
     private final UserDetailsChecker postAuthenticationChecks = new DefaultPostAuthenticationChecks();
 
-    private final UserDetailsService userDetailsService;
-
-    private final GrantedAuthoritiesMapper authoritiesMapper;
+    private final GrantedAuthoritiesMapper authoritiesMapper = new SimpleAuthorityMapper();
 
     private final JwtProvider jwtProvider;
+
+    private final UserDetailsService userDetailsService;
 
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
@@ -48,7 +52,14 @@ public class JwtAuthenticationProvider implements AuthenticationProvider, Initia
                 JwtAuthenticationToken.class, authentication, () -> "Only JwtAuthenticationToken is supported");
 
         JwtAuthenticationToken jwtAuthenticationToken = (JwtAuthenticationToken) authentication;
-        String username = authentication.getName();
+
+        if (authentication.getCredentials() == null) {
+            log.debug("Failed to authenticate since no credentials provided");
+            throw new BadCredentialsException(BAD_CREDENTIALS);
+        }
+
+        Claims claims = parseToClaims(authentication.getCredentials().toString());
+        String username = claims.getSubject();
 
         boolean cacheWasUsed = true;
         UserDetails user = this.userCache.getUserFromCache(username);
@@ -70,7 +81,6 @@ public class JwtAuthenticationProvider implements AuthenticationProvider, Initia
 
         try {
             this.preAuthenticationChecks.check(user);
-            additionalAuthenticationChecks(jwtAuthenticationToken);
         } catch (AuthenticationException ex) {
             if (!cacheWasUsed) {
                 throw ex;
@@ -80,7 +90,6 @@ public class JwtAuthenticationProvider implements AuthenticationProvider, Initia
             cacheWasUsed = false;
             user = retrieveUser(username);
             this.preAuthenticationChecks.check(user);
-            additionalAuthenticationChecks(jwtAuthenticationToken);
         }
         this.postAuthenticationChecks.check(user);
         if (!cacheWasUsed) {
@@ -97,6 +106,16 @@ public class JwtAuthenticationProvider implements AuthenticationProvider, Initia
         Assert.notNull(this.userDetailsService, "A UserDetailsService must be set");
     }
 
+    private Claims parseToClaims(String accessToken) {
+        try {
+            Jws<Claims> jws = jwtProvider.getJws(accessToken);
+            return jws.getBody();
+        } catch (JwtException | IllegalArgumentException e) {
+            log.debug("Failed to authenticate since the access token is not valid");
+            throw new BadCredentialsException(BAD_CREDENTIALS);
+        }
+    }
+
     private UserDetails retrieveUser(String username) throws AuthenticationException {
         try {
             UserDetails loadedUser = this.userDetailsService.loadUserByUsername(username);
@@ -104,7 +123,6 @@ public class JwtAuthenticationProvider implements AuthenticationProvider, Initia
                 throw new InternalAuthenticationServiceException(
                         "UserDetailsService returned null, which is an interface contract violation");
             }
-
             return loadedUser;
         } catch (UsernameNotFoundException ex) {
             throw ex;
@@ -112,19 +130,6 @@ public class JwtAuthenticationProvider implements AuthenticationProvider, Initia
             throw ex;
         } catch (Exception ex) {
             throw new InternalAuthenticationServiceException(ex.getMessage(), ex);
-        }
-    }
-
-    private void additionalAuthenticationChecks(JwtAuthenticationToken authentication) {
-        if (authentication.getCredentials() == null) {
-            log.debug("Failed to authenticate since no credentials provided");
-            throw new BadCredentialsException(BAD_CREDENTIALS);
-        }
-
-        String accessToken = authentication.getCredentials().toString();
-        if (!jwtProvider.isValid(accessToken)) {
-            log.debug("Failed to authenticate since the access token is not valid");
-            throw new BadCredentialsException(BAD_CREDENTIALS);
         }
     }
 

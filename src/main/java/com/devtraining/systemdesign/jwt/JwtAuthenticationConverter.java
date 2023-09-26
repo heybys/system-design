@@ -1,8 +1,5 @@
 package com.devtraining.systemdesign.jwt;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jws;
-import io.jsonwebtoken.JwtException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,8 +15,6 @@ public class JwtAuthenticationConverter implements AuthenticationConverter {
 
     public static final String AUTHENTICATION_SCHEME_BEARER = "Bearer";
 
-    private final JwtProvider jwtProvider;
-
     @Override
     public Authentication convert(HttpServletRequest request) {
         String header = request.getHeader(HttpHeaders.AUTHORIZATION);
@@ -34,15 +29,6 @@ public class JwtAuthenticationConverter implements AuthenticationConverter {
             throw new BadCredentialsException("Empty bearer authentication token");
         }
 
-        String accessToken = header.substring(7);
-        Jws<Claims> jws;
-        try {
-            jws = jwtProvider.getJws(accessToken);
-        } catch (JwtException | IllegalArgumentException e) {
-            return null;
-        }
-        Claims claims = jws.getBody();
-
-        return JwtAuthenticationToken.unauthenticated(claims.getSubject(), accessToken);
+        return JwtAuthenticationToken.unauthenticated(header.substring(7));
     }
 }

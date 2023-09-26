@@ -14,9 +14,9 @@ public class JwtAuthenticationToken extends AbstractAuthenticationToken {
     @Transient
     private final Object credentials;
 
-    private JwtAuthenticationToken(Object principal, Object credentials) {
+    private JwtAuthenticationToken(Object credentials) {
         super(null);
-        this.principal = principal;
+        this.principal = null;
         this.credentials = credentials;
         setAuthenticated(false);
     }
@@ -29,8 +29,8 @@ public class JwtAuthenticationToken extends AbstractAuthenticationToken {
         super.setAuthenticated(true);
     }
 
-    public static JwtAuthenticationToken unauthenticated(Object principal, Object credentials) {
-        return new JwtAuthenticationToken(principal, credentials);
+    public static JwtAuthenticationToken unauthenticated(Object credentials) {
+        return new JwtAuthenticationToken(credentials);
     }
 
     public static JwtAuthenticationToken authenticated(

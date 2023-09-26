@@ -4,7 +4,6 @@ import com.devtraining.systemdesign.jwt.JwtAuthenticationConverter;
 import com.devtraining.systemdesign.jwt.JwtAuthenticationFilter;
 import com.devtraining.systemdesign.jwt.JwtAuthenticationProvider;
 import com.devtraining.systemdesign.jwt.JwtProvider;
-import java.time.Duration;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,8 +17,6 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMapper;
-import org.springframework.security.core.authority.mapping.SimpleAuthorityMapper;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -97,14 +94,8 @@ public class SecurityConfig {
     }
 
     @Bean
-    public GrantedAuthoritiesMapper grantedAuthoritiesMapper() {
-        return new SimpleAuthorityMapper();
-    }
-
-    @Bean
     public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
-        JwtAuthenticationProvider provider =
-                new JwtAuthenticationProvider(userDetailsService, grantedAuthoritiesMapper(), jwtProvider());
+        JwtAuthenticationProvider provider = new JwtAuthenticationProvider(jwtProvider(), userDetailsService);
 
         AuthenticationManagerBuilder authenticationManagerBuilder =
                 http.getSharedObject(AuthenticationManagerBuilder.class);
@@ -116,7 +107,7 @@ public class SecurityConfig {
     @Bean
     public AuthenticationFilter authenticationFilter(HttpSecurity http) throws Exception {
         AuthenticationManager authenticationManager = authenticationManager(http);
-        JwtAuthenticationConverter authenticationConverter = new JwtAuthenticationConverter(jwtProvider());
+        JwtAuthenticationConverter authenticationConverter = new JwtAuthenticationConverter();
 
         JwtAuthenticationFilter filter = new JwtAuthenticationFilter(authenticationManager, authenticationConverter);
 
@@ -126,10 +117,8 @@ public class SecurityConfig {
 
     @Bean
     public JwtProvider jwtProvider() {
-        long accessTokenExpirationTime = Duration.ofMinutes(30).toMillis();
-        long refreshTokenExpirationTime = Duration.ofDays(14).toMillis();
         String secretKey = "secretKey1234secretKey1234secretKey1234secretKey1234";
 
-        return new JwtProvider(accessTokenExpirationTime, refreshTokenExpirationTime, secretKey);
+        return new JwtProvider(secretKey);
     }
 }

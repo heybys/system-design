@@ -6,6 +6,7 @@ import com.devtraining.systemdesign.member.domain.Member;
 import com.devtraining.systemdesign.member.domain.MemberAuthority;
 import com.devtraining.systemdesign.member.domain.MemberRepository;
 import jakarta.annotation.PostConstruct;
+import java.time.Duration;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -21,6 +22,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class AuthService {
+    private final Duration accessTokenTtl = Duration.ofSeconds(5);
+    private final Duration refreshTokenTtl = Duration.ofSeconds(10);
 
     private final JwtProvider jwtProvider;
     private final PasswordEncoder passwordEncoder;
@@ -76,8 +79,8 @@ public class AuthService {
                 .map(MemberAuthority::getAuthority)
                 .collect(Collectors.toSet());
 
-        String accessToken = jwtProvider.createAccessToken(username, authorities);
-        String refreshToken = jwtProvider.createRefreshToken(username, authorities);
+        String accessToken = jwtProvider.createAccessToken(username, authorities, accessTokenTtl);
+        String refreshToken = jwtProvider.createRefreshToken(username, authorities, refreshTokenTtl);
 
         return new AuthInfo(accessToken, refreshToken);
     }
