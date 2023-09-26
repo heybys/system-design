@@ -11,20 +11,21 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 
-@Configuration
 @EnableJpaAuditing(auditorAwareRef = "auditorAware", dateTimeProviderRef = "dateTimeProvider")
-public class EntityConfig {
+@Configuration
+public class JpaAuditConfig {
 
     @Bean
     public AuditorAware<String> auditorAware() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return () -> {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        if (authentication != null && (authentication.getPrincipal()) instanceof UserDetails) {
-            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-            return () -> Optional.of(userDetails.getUsername());
-        }
-
-        return () -> Optional.of("SYSTEM");
+            if (authentication != null && (authentication.getPrincipal()) instanceof UserDetails) {
+                UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+                return Optional.of(userDetails.getUsername());
+            }
+            return Optional.of("SYSTEM");
+        };
     }
 
     @Bean
