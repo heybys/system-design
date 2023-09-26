@@ -24,6 +24,9 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class AuthService {
+    private final String ADMIN_USERNAME = "admin";
+    private final String ADMIN_PASSWORD = "admin";
+
     private final Duration accessTokenTtl = Duration.ofSeconds(5);
     private final Duration refreshTokenTtl = Duration.ofSeconds(10);
 
@@ -37,13 +40,13 @@ public class AuthService {
 
     @PostConstruct
     public void init() {
-        boolean isAdminPresent = memberRepository.findByUsername("admin").isPresent();
+        boolean isAdminPresent = memberRepository.findByUsername(ADMIN_USERNAME).isPresent();
         if (isAdminPresent) {
             log.debug("Admin has already been created");
         } else {
             MemberDto memberDto = MemberDto.builder()
-                    .username("admin")
-                    .rawPassword("admin")
+                    .username(ADMIN_USERNAME)
+                    .rawPassword(ADMIN_PASSWORD)
                     .authorityTypes(List.of(AuthorityType.ADMIN))
                     .build();
 
