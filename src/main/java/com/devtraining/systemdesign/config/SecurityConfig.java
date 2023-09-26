@@ -5,14 +5,15 @@ import com.devtraining.systemdesign.jwt.JwtAuthenticationFilter;
 import com.devtraining.systemdesign.jwt.JwtAuthenticationProvider;
 import com.devtraining.systemdesign.jwt.JwtProvider;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -37,18 +38,17 @@ public class SecurityConfig {
 
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
-        return WebSecurity::ignoring;
+        return web ->
+                web.ignoring().requestMatchers(PathRequest.toStaticResources().atCommonLocations());
     }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http.authenticationManager(authenticationManager(http))
-                .authorizeHttpRequests(authz -> authz.requestMatchers("/api/auth/**")
+                .authorizeHttpRequests(auth -> auth.requestMatchers("/api/auth/**")
                         .permitAll()
-                        .requestMatchers(HttpMethod.GET, "/error")
-                        .permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/post/**")
+                        .requestMatchers(HttpMethod.GET, "/error", "/api/post/**")
                         .permitAll()
                         .requestMatchers("/api/member/**")
                         .hasRole("ADMIN")
@@ -59,7 +59,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
-                .anonymous(AbstractHttpConfigurer::disable)
+                .anonymous(Customizer.withDefaults())
                 .rememberMe(AbstractHttpConfigurer::disable)
                 .logout(AbstractHttpConfigurer::disable)
                 .exceptionHandling(configurer -> configurer.authenticationEntryPoint(authenticationEntryPoint()))
