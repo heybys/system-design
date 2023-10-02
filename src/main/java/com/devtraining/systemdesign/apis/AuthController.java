@@ -3,6 +3,7 @@ package com.devtraining.systemdesign.apis;
 import com.devtraining.systemdesign.member.service.AuthInfo;
 import com.devtraining.systemdesign.member.service.AuthService;
 import com.devtraining.systemdesign.member.service.LoginRequest;
+import com.devtraining.systemdesign.member.service.ReissueRequest;
 import com.devtraining.systemdesign.member.service.SignupRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +32,12 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<AuthInfo> login(@RequestBody LoginRequest loginRequest) {
         AuthInfo authInfo = authService.login(loginRequest);
+        return ResponseEntity.ok(authInfo);
+    }
+
+    @PostMapping("/reissue")
+    public ResponseEntity<AuthInfo> reissue(@RequestBody ReissueRequest reissueRequest) {
+        AuthInfo authInfo = authService.reissue(reissueRequest);
         return ResponseEntity.ok(authInfo);
     }
 }

@@ -33,8 +33,4 @@ public class RefreshToken {
         this.ttl = TimeUnit.MILLISECONDS.convert(ttl);
         this.createdAt = OffsetDateTime.now();
     }
-
-    public void update(String value) {
-        this.value = value;
-    }
 }

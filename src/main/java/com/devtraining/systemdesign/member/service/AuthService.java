@@ -27,8 +27,8 @@ public class AuthService {
     private final String ADMIN_USERNAME = "admin";
     private final String ADMIN_PASSWORD = "admin";
 
-    private final Duration accessTokenTtl = Duration.ofSeconds(5);
-    private final Duration refreshTokenTtl = Duration.ofSeconds(10);
+    private final Duration accessTokenTtl = Duration.ofSeconds(3);
+    private final Duration refreshTokenTtl = Duration.ofSeconds(5);
 
     private final JwtProvider jwtProvider;
     private final PasswordEncoder passwordEncoder;
@@ -86,16 +86,58 @@ public class AuthService {
                 .map(MemberAuthority::getAuthority)
                 .collect(Collectors.toSet());
 
+        return createAuthInfo(username, authorities);
+    }
+
+    @Transactional
+    public AuthInfo reissue(ReissueRequest reissueRequest) {
+        String oldAccessToken = reissueRequest.accessToken();
+        String oldRefreshToken = reissueRequest.refreshToken();
+
+        verifyToRefresh(oldAccessToken, oldRefreshToken);
+
+        String username = jwtProvider.getUsername(oldRefreshToken);
+
+        Member member = memberRepository
+                .findWithAuthorityByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("Username not found"));
+
+        Set<Authority> authorities = member.getMemberAuthorities().stream()
+                .map(MemberAuthority::getAuthority)
+                .collect(Collectors.toSet());
+
+        return createAuthInfo(username, authorities);
+    }
+
+    private AuthInfo createAuthInfo(String username, Set<Authority> authorities) {
         String accessToken = jwtProvider.createAccessToken(username, authorities, accessTokenTtl);
         String refreshToken = jwtProvider.createRefreshToken(username, authorities, refreshTokenTtl);
 
-        RefreshToken refreshTokenEntity = RefreshToken.builder()
+        refreshTokenRepository.save(RefreshToken.builder()
                 .key(username)
                 .value(refreshToken)
                 .ttl(refreshTokenTtl)
-                .build();
-        refreshTokenRepository.save(refreshTokenEntity);
+                .build());
 
         return new AuthInfo(accessToken, refreshToken);
+    }
+
+    private void verifyToRefresh(String accessToken, String refreshToken) {
+        if (!jwtProvider.isExpired(accessToken)) {
+            throw new BadCredentialsException("AccessToken is not expired token");
+        }
+
+        String username = jwtProvider.getUsername(refreshToken);
+
+        RefreshToken refreshTokenInfo = refreshTokenRepository
+                .findById(username)
+                .orElseThrow(() -> new BadCredentialsException("RefreshToken not found"));
+
+        String oldRefreshToken = refreshTokenInfo.getValue();
+
+        if (!oldRefreshToken.equals(refreshToken)) {
+            refreshTokenRepository.deleteById(refreshTokenInfo.getKey());
+            throw new BadCredentialsException("Fail to refresh token");
+        }
     }
 }
