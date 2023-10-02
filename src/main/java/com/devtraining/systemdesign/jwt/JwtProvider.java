@@ -2,6 +2,7 @@ package com.devtraining.systemdesign.jwt;
 
 import com.devtraining.systemdesign.member.domain.Authority;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.JwtParser;
@@ -14,11 +15,12 @@ import java.util.Date;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.authentication.BadCredentialsException;
 
 @Slf4j
 public class JwtProvider {
 
-    public static final String AUTHORITIES_KEY = "auth";
+    private static final String AUTHORITIES_KEY = "auth";
     private final Key key;
     private final JwtParser jwtParser;
 
@@ -37,18 +39,41 @@ public class JwtProvider {
         return createToken(username, authorities, ttl);
     }
 
-    public Jws<Claims> getJws(String token) {
-        return jwtParser.parseClaimsJws(token);
-    }
-
     public boolean isValid(String token) {
         try {
             jwtParser.parseClaimsJws(token);
             return true;
         } catch (JwtException | IllegalArgumentException e) {
-            log.error(e.getMessage());
+            return false;
         }
-        return false;
+    }
+
+    public boolean isExpired(String token) {
+        try {
+            jwtParser.parseClaimsJws(token);
+            return false;
+        } catch (ExpiredJwtException e) {
+            return true;
+        } catch (JwtException | IllegalArgumentException e) {
+            return false;
+        }
+    }
+
+    public String getUsername(String token) {
+        Claims claims = getClaims(token);
+        return claims.getSubject();
+    }
+
+    private Claims getClaims(String token) {
+        try {
+            Jws<Claims> jws = jwtParser.parseClaimsJws(token);
+            return jws.getBody();
+        } catch (ExpiredJwtException e) {
+            return e.getClaims();
+        } catch (JwtException | IllegalArgumentException e) {
+            log.debug("Failed to authenticate since the access token is not valid");
+            throw new BadCredentialsException("Bad credentials");
+        }
     }
 
     private String createToken(String username, Set<Authority> authorities, Duration ttl) {

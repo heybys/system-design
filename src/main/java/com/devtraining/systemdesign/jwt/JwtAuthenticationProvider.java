@@ -1,8 +1,5 @@
 package com.devtraining.systemdesign.jwt;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jws;
-import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
@@ -29,8 +26,6 @@ import org.springframework.util.Assert;
 @RequiredArgsConstructor
 public class JwtAuthenticationProvider implements AuthenticationProvider, InitializingBean {
 
-    private static final String BAD_CREDENTIALS = "Bad credentials";
-
     private final boolean hideUserNotFoundExceptions = true;
 
     // private final UserCache userCache = new SpringCacheBasedUserCache(new ConcurrentMapCache("userCache"));
@@ -53,11 +48,15 @@ public class JwtAuthenticationProvider implements AuthenticationProvider, Initia
 
         if (authentication.getCredentials() == null) {
             log.debug("Failed to authenticate since no credentials provided");
-            throw new BadCredentialsException(BAD_CREDENTIALS);
+            throw new BadCredentialsException("No credentials provided");
+        }
+        String accessToken = authentication.getCredentials().toString();
+
+        if (!jwtProvider.isValid(accessToken)) {
+            throw new BadCredentialsException("AccessToken is not valid");
         }
 
-        Claims claims = parseToClaims(authentication.getCredentials().toString());
-        String username = claims.getSubject();
+        String username = jwtProvider.getUsername(accessToken);
 
         boolean cacheWasUsed = true;
         UserDetails user = this.userCache.getUserFromCache(username);
@@ -72,7 +71,7 @@ public class JwtAuthenticationProvider implements AuthenticationProvider, Initia
                     throw ex;
                 }
 
-                throw new BadCredentialsException(BAD_CREDENTIALS);
+                throw new BadCredentialsException("Bad credentials");
             }
             Assert.notNull(user, "retrieveUser returned null - a violation of the interface contract");
         }
@@ -102,16 +101,6 @@ public class JwtAuthenticationProvider implements AuthenticationProvider, Initia
     public final void afterPropertiesSet() {
         Assert.notNull(this.userCache, "A user cache must be set");
         Assert.notNull(this.userDetailsService, "A UserDetailsService must be set");
-    }
-
-    private Claims parseToClaims(String accessToken) {
-        try {
-            Jws<Claims> jws = jwtProvider.getJws(accessToken);
-            return jws.getBody();
-        } catch (JwtException | IllegalArgumentException e) {
-            log.debug("Failed to authenticate since the access token is not valid");
-            throw new BadCredentialsException(BAD_CREDENTIALS);
-        }
     }
 
     private UserDetails retrieveUser(String username) throws AuthenticationException {
