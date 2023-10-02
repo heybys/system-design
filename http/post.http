@@ -1,10 +1,12 @@
 ### Post 전체 조회
 GET http://localhost:8080/api/post
 Content-Type: application/json
+Authorization: Bearer {{accessToken}}
 
 ### Post 조회
 GET http://localhost:8080/api/post/1
 Content-Type: application/json
+Authorization: Bearer {{accessToken}}
 
 ### Post 생성
 POST http://localhost:8080/api/post

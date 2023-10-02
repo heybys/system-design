@@ -12,11 +12,33 @@ POST http://localhost:8080/api/auth/login
 Content-Type: application/json
 
 {
-  "username": "normal",
-  "password": "1q2w3e4r1!"
+  "username": "admin",
+  "password": "admin"
 }
 
 > {%
-client.global.set("accessToken", response.body.accessToken);
-client.global.set("refreshToken", response.body.refreshToken);
- %}
+  if (response.body.accessToken) {
+    client.global.set("accessToken", response.body.accessToken);
+  }
+  if (response.body.refreshToken) {
+    client.global.set("refreshToken", response.body.refreshToken);
+  }
+%}
+
+### 토큰 재발행
+POST http://localhost:8080/api/auth/reissue
+Content-Type: application/json
+
+{
+  "accessToken": "{{accessToken}}",
+  "refreshToken": "{{refreshToken}}"
+}
+
+> {%
+  if (response.body.accessToken) {
+    client.global.set("accessToken", response.body.accessToken);
+  }
+  if (response.body.refreshToken) {
+    client.global.set("refreshToken", response.body.refreshToken);
+  }
+%}
