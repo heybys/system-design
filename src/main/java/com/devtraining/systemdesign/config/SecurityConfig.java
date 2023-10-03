@@ -3,6 +3,8 @@ package com.devtraining.systemdesign.config;
 import com.devtraining.systemdesign.jwt.JwtAuthenticationConverter;
 import com.devtraining.systemdesign.jwt.JwtAuthenticationFilter;
 import com.devtraining.systemdesign.jwt.JwtAuthenticationProvider;
+import com.devtraining.systemdesign.jwt.JwtDecoder;
+import com.devtraining.systemdesign.jwt.JwtProperties;
 import com.devtraining.systemdesign.jwt.JwtProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
@@ -17,7 +19,6 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.AuthenticationEntryPoint;
@@ -33,7 +34,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final UserDetailsService userDetailsService;
+    private final JwtProperties jwtProperties;
 
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
@@ -43,15 +44,16 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        AuthenticationManager authenticationManager = authenticationManager(http);
+        AuthenticationFilter authenticationFilter = authenticationFilter(authenticationManager);
 
-        http.authenticationManager(authenticationManager(http))
-                .authorizeHttpRequests(auth -> auth.requestMatchers("/api/auth/**", "/error")
+        http.authorizeHttpRequests(auth -> auth.requestMatchers("/api/auth/**", "/error")
                         .permitAll()
                         .requestMatchers("/api/member/**")
                         .hasRole("ADMIN")
                         .anyRequest()
                         .authenticated())
-                .addFilterBefore(authenticationFilter(http), UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
@@ -91,8 +93,23 @@ public class SecurityConfig {
     }
 
     @Bean
+    public JwtProvider jwtProvider() {
+        return new JwtProvider(jwtProperties);
+    }
+
+    @Bean
+    public JwtDecoder jwtDecoder() {
+        return new JwtDecoder(jwtProperties);
+    }
+
+    @Bean
+    public JwtAuthenticationProvider authenticationProvider() {
+        return new JwtAuthenticationProvider(jwtDecoder());
+    }
+
+    @Bean
     public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
-        JwtAuthenticationProvider provider = new JwtAuthenticationProvider(jwtProvider(), userDetailsService);
+        JwtAuthenticationProvider provider = new JwtAuthenticationProvider(jwtDecoder());
 
         AuthenticationManagerBuilder authenticationManagerBuilder =
                 http.getSharedObject(AuthenticationManagerBuilder.class);
@@ -102,20 +119,12 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationFilter authenticationFilter(HttpSecurity http) throws Exception {
-        AuthenticationManager authenticationManager = authenticationManager(http);
+    public AuthenticationFilter authenticationFilter(AuthenticationManager authenticationManager) {
         JwtAuthenticationConverter authenticationConverter = new JwtAuthenticationConverter();
 
         JwtAuthenticationFilter filter = new JwtAuthenticationFilter(authenticationManager, authenticationConverter);
 
         filter.setSuccessHandler((request, response, authentication) -> {});
         return filter;
-    }
-
-    @Bean
-    public JwtProvider jwtProvider() {
-        String secretKey = "secretKey1234secretKey1234secretKey1234secretKey1234";
-
-        return new JwtProvider(secretKey);
     }
 }

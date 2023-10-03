@@ -1,5 +1,6 @@
 package com.devtraining.systemdesign.member.service;
 
+import com.devtraining.systemdesign.jwt.JwtDecoder;
 import com.devtraining.systemdesign.jwt.JwtProvider;
 import com.devtraining.systemdesign.member.domain.Authority;
 import com.devtraining.systemdesign.member.domain.Member;
@@ -15,6 +16,7 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -27,11 +29,12 @@ public class AuthService {
     private final String ADMIN_USERNAME = "admin";
     private final String ADMIN_PASSWORD = "admin";
 
-    private final Duration accessTokenTtl = Duration.ofSeconds(3);
-    private final Duration refreshTokenTtl = Duration.ofSeconds(5);
+    private final Duration accessTokenTtl = Duration.ofMinutes(10);
+    private final Duration refreshTokenTtl = Duration.ofMinutes(60);
 
-    private final JwtProvider jwtProvider;
     private final PasswordEncoder passwordEncoder;
+    private final JwtProvider jwtProvider;
+    private final JwtDecoder jwtDecoder;
 
     private final MemberService memberService;
     private final MemberRepository memberRepository;
@@ -68,7 +71,7 @@ public class AuthService {
     }
 
     @Transactional
-    public AuthInfo login(LoginRequest loginRequest) {
+    public TokenInfo login(LoginRequest loginRequest) {
         String username = loginRequest.username();
         String password = loginRequest.rawPassword();
 
@@ -82,34 +85,34 @@ public class AuthService {
             throw new BadCredentialsException("Failed to login");
         }
 
-        Set<Authority> authorities = member.getMemberAuthorities().stream()
-                .map(MemberAuthority::getAuthority)
-                .collect(Collectors.toSet());
-
-        return createAuthInfo(username, authorities);
+        return createTokenInfo(member);
     }
 
     @Transactional
-    public AuthInfo reissue(ReissueRequest reissueRequest) {
+    public TokenInfo reissue(ReissueRequest reissueRequest) {
         String oldAccessToken = reissueRequest.accessToken();
         String oldRefreshToken = reissueRequest.refreshToken();
 
         verifyToRefresh(oldAccessToken, oldRefreshToken);
 
-        String username = jwtProvider.getUsername(oldRefreshToken);
+        String username = jwtDecoder.getUsername(oldRefreshToken);
 
         Member member = memberRepository
                 .findWithAuthorityByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("Username not found"));
 
-        Set<Authority> authorities = member.getMemberAuthorities().stream()
-                .map(MemberAuthority::getAuthority)
-                .collect(Collectors.toSet());
-
-        return createAuthInfo(username, authorities);
+        return createTokenInfo(member);
     }
 
-    private AuthInfo createAuthInfo(String username, Set<Authority> authorities) {
+    private TokenInfo createTokenInfo(Member member) {
+        String username = member.getUsername();
+
+        Set<SimpleGrantedAuthority> authorities = member.getMemberAuthorities().stream()
+                .map(MemberAuthority::getAuthority)
+                .map(Authority::getName)
+                .map(SimpleGrantedAuthority::new)
+                .collect(Collectors.toSet());
+
         String accessToken = jwtProvider.createAccessToken(username, authorities, accessTokenTtl);
         String refreshToken = jwtProvider.createRefreshToken(username, authorities, refreshTokenTtl);
 
@@ -119,15 +122,15 @@ public class AuthService {
                 .ttl(refreshTokenTtl)
                 .build());
 
-        return new AuthInfo(accessToken, refreshToken);
+        return new TokenInfo(accessToken, refreshToken);
     }
 
     private void verifyToRefresh(String accessToken, String refreshToken) {
-        if (!jwtProvider.isExpired(accessToken)) {
+        if (!jwtDecoder.isExpired(accessToken)) {
             throw new BadCredentialsException("AccessToken is not expired token");
         }
 
-        String username = jwtProvider.getUsername(refreshToken);
+        String username = jwtDecoder.getUsername(refreshToken);
 
         RefreshToken refreshTokenInfo = refreshTokenRepository
                 .findById(username)

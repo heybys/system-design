@@ -1,5 +1,6 @@
 package com.devtraining.systemdesign.jwt;
 
+import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
@@ -8,7 +9,6 @@ import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.CredentialsExpiredException;
 import org.springframework.security.authentication.DisabledException;
-import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -17,16 +17,12 @@ import org.springframework.security.core.authority.mapping.SimpleAuthorityMapper
 import org.springframework.security.core.userdetails.UserCache;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsChecker;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.core.userdetails.cache.NullUserCache;
 import org.springframework.util.Assert;
 
 @Slf4j
 @RequiredArgsConstructor
 public class JwtAuthenticationProvider implements AuthenticationProvider, InitializingBean {
-
-    private final boolean hideUserNotFoundExceptions = true;
 
     // private final UserCache userCache = new SpringCacheBasedUserCache(new ConcurrentMapCache("userCache"));
     private final UserCache userCache = new NullUserCache();
@@ -37,9 +33,7 @@ public class JwtAuthenticationProvider implements AuthenticationProvider, Initia
 
     private final GrantedAuthoritiesMapper authoritiesMapper = new SimpleAuthorityMapper();
 
-    private final JwtProvider jwtProvider;
-
-    private final UserDetailsService userDetailsService;
+    private final JwtDecoder jwtDecoder;
 
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
@@ -52,29 +46,22 @@ public class JwtAuthenticationProvider implements AuthenticationProvider, Initia
         }
         String accessToken = authentication.getCredentials().toString();
 
-        if (!jwtProvider.isValid(accessToken)) {
-            throw new BadCredentialsException("AccessToken is not valid");
-        }
-
-        String username = jwtProvider.getUsername(accessToken);
-
         boolean cacheWasUsed = true;
-        UserDetails user = this.userCache.getUserFromCache(username);
+        UserDetails user;
+        try {
+            String username = jwtDecoder.getUsername(accessToken);
+            user = this.userCache.getUserFromCache(username);
 
-        if (user == null) {
-            cacheWasUsed = false;
-            try {
-                user = retrieveUser(username);
-            } catch (UsernameNotFoundException ex) {
-                log.debug("Failed to find user '" + username + "'");
-                if (!this.hideUserNotFoundExceptions) {
-                    throw ex;
-                }
-
-                throw new BadCredentialsException("Bad credentials");
+            if (user == null) {
+                cacheWasUsed = false;
+                user = jwtDecoder.getUserDetails(accessToken);
             }
-            Assert.notNull(user, "retrieveUser returned null - a violation of the interface contract");
+        } catch (JwtException | IllegalArgumentException e) {
+            log.debug("Failed to get username from '" + accessToken + "'");
+            throw new BadCredentialsException("Invalid accessToken");
         }
+
+        Assert.notNull(user, "getUserDetails returned null - a violation of the interface contract");
 
         try {
             this.preAuthenticationChecks.check(user);
@@ -85,7 +72,7 @@ public class JwtAuthenticationProvider implements AuthenticationProvider, Initia
             // There was a problem, so try again after checking
             // we're using latest data (i.e. not from the cache)
             cacheWasUsed = false;
-            user = retrieveUser(username);
+            user = jwtDecoder.getUserDetails(accessToken);
             this.preAuthenticationChecks.check(user);
         }
         this.postAuthenticationChecks.check(user);
@@ -100,22 +87,6 @@ public class JwtAuthenticationProvider implements AuthenticationProvider, Initia
     @Override
     public final void afterPropertiesSet() {
         Assert.notNull(this.userCache, "A user cache must be set");
-        Assert.notNull(this.userDetailsService, "A UserDetailsService must be set");
-    }
-
-    private UserDetails retrieveUser(String username) throws AuthenticationException {
-        try {
-            UserDetails loadedUser = this.userDetailsService.loadUserByUsername(username);
-            if (loadedUser == null) {
-                throw new InternalAuthenticationServiceException(
-                        "UserDetailsService returned null, which is an interface contract violation");
-            }
-            return loadedUser;
-        } catch (UsernameNotFoundException | InternalAuthenticationServiceException ex) {
-            throw ex;
-        } catch (Exception ex) {
-            throw new InternalAuthenticationServiceException(ex.getMessage(), ex);
-        }
     }
 
     private Authentication createSuccessAuthentication(
