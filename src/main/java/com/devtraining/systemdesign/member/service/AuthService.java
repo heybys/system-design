@@ -30,7 +30,7 @@ public class AuthService {
     private final String ADMIN_PASSWORD = "admin";
 
     private final Duration accessTokenTtl = Duration.ofMinutes(10);
-    private final Duration refreshTokenTtl = Duration.ofMinutes(60);
+    private final Duration refreshTokenTtl = Duration.ofDays(14);
 
     private final PasswordEncoder passwordEncoder;
     private final JwtProvider jwtProvider;
