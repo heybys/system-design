@@ -9,19 +9,19 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 @Slf4j
-public class JwtProvider {
+public class JwtEncoder {
     private final JwtProperties properties;
 
-    public JwtProvider(JwtProperties properties) {
+    public JwtEncoder(JwtProperties properties) {
         this.properties = properties;
     }
 
-    public String createAccessToken(String username, Set<SimpleGrantedAuthority> authorities, Duration ttl) {
-        return createToken(username, authorities, ttl);
+    public String createAccessToken(String username, Set<SimpleGrantedAuthority> authorities) {
+        return createToken(username, authorities, properties.getAccessTokenTtl());
     }
 
-    public String createRefreshToken(String username, Set<SimpleGrantedAuthority> authorities, Duration ttl) {
-        return createToken(username, authorities, ttl);
+    public String createRefreshToken(String username, Set<SimpleGrantedAuthority> authorities) {
+        return createToken(username, authorities, properties.getRefreshTokenTtl());
     }
 
     private String createToken(String username, Set<SimpleGrantedAuthority> authorities, Duration ttl) {
@@ -40,5 +40,9 @@ public class JwtProvider {
                 .signWith(properties.getKey())
                 // .signWith(key, SignatureAlgorithm.HS512)
                 .compact();
+    }
+
+    public Duration getRefreshTokenTtl() {
+        return properties.getRefreshTokenTtl();
     }
 }

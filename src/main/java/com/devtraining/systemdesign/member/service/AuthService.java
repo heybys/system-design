@@ -1,7 +1,7 @@
 package com.devtraining.systemdesign.member.service;
 
 import com.devtraining.systemdesign.jwt.JwtDecoder;
-import com.devtraining.systemdesign.jwt.JwtProvider;
+import com.devtraining.systemdesign.jwt.JwtEncoder;
 import com.devtraining.systemdesign.member.domain.Authority;
 import com.devtraining.systemdesign.member.domain.Member;
 import com.devtraining.systemdesign.member.domain.MemberAuthority;
@@ -9,7 +9,6 @@ import com.devtraining.systemdesign.member.domain.MemberRepository;
 import com.devtraining.systemdesign.member.domain.RefreshToken;
 import com.devtraining.systemdesign.member.domain.RefreshTokenRepository;
 import jakarta.annotation.PostConstruct;
-import java.time.Duration;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -29,11 +28,8 @@ public class AuthService {
     private final String ADMIN_USERNAME = "admin";
     private final String ADMIN_PASSWORD = "admin";
 
-    private final Duration accessTokenTtl = Duration.ofMinutes(10);
-    private final Duration refreshTokenTtl = Duration.ofDays(14);
-
     private final PasswordEncoder passwordEncoder;
-    private final JwtProvider jwtProvider;
+    private final JwtEncoder jwtEncoder;
     private final JwtDecoder jwtDecoder;
 
     private final MemberService memberService;
@@ -113,13 +109,13 @@ public class AuthService {
                 .map(SimpleGrantedAuthority::new)
                 .collect(Collectors.toSet());
 
-        String accessToken = jwtProvider.createAccessToken(username, authorities, accessTokenTtl);
-        String refreshToken = jwtProvider.createRefreshToken(username, authorities, refreshTokenTtl);
+        String accessToken = jwtEncoder.createAccessToken(username, authorities);
+        String refreshToken = jwtEncoder.createRefreshToken(username, authorities);
 
         refreshTokenRepository.save(RefreshToken.builder()
                 .key(username)
                 .value(refreshToken)
-                .ttl(refreshTokenTtl)
+                .ttl(jwtEncoder.getRefreshTokenTtl())
                 .build());
 
         return new TokenInfo(accessToken, refreshToken);

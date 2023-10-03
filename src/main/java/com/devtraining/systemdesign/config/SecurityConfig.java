@@ -5,7 +5,7 @@ import com.devtraining.systemdesign.jwt.JwtAuthenticationFilter;
 import com.devtraining.systemdesign.jwt.JwtAuthenticationProvider;
 import com.devtraining.systemdesign.jwt.JwtDecoder;
 import com.devtraining.systemdesign.jwt.JwtProperties;
-import com.devtraining.systemdesign.jwt.JwtProvider;
+import com.devtraining.systemdesign.jwt.JwtEncoder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
@@ -93,8 +93,8 @@ public class SecurityConfig {
     }
 
     @Bean
-    public JwtProvider jwtProvider() {
-        return new JwtProvider(jwtProperties);
+    public JwtEncoder jwtEncoder() {
+        return new JwtEncoder(jwtProperties);
     }
 
     @Bean
