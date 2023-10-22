@@ -2,17 +2,15 @@ package com.devtraining.systemdesign.jwt;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.Jwe;
-import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
-import java.security.PrivateKey;
-import java.security.PublicKey;
+import io.jsonwebtoken.security.RsaPrivateJwk;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.interfaces.RSAPublicKey;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-import javax.crypto.SecretKey;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
@@ -21,28 +19,19 @@ import org.springframework.util.Assert;
 
 @Slf4j
 public class JwtDecoder {
-    private final JwtType jwtType;
     private final String authoritiesKey;
-    private final JwtParser jwtParser;
+    private final JwtType jwtType;
+    private final RsaPrivateJwk privateJwk;
 
     public JwtDecoder(JwtProperties properties) {
         this.jwtType = properties.getJwtType();
         this.authoritiesKey = properties.getAuthoritiesKey();
-
-        if (JwtType.SIG.equals(this.jwtType)) {
-            // SecretKey secretKey = properties.getSecretKey();
-            // this.jwtParser = Jwts.parser().verifyWith(secretKey).build();
-            PublicKey publicKey = properties.getPublicKey();
-            this.jwtParser = Jwts.parser().verifyWith(publicKey).build();
-        } else {
-            PrivateKey privateKey = properties.getPrivateKey();
-            this.jwtParser = Jwts.parser().decryptWith(privateKey).build();
-        }
+        this.privateJwk = properties.getPrivateJwk();
     }
 
     public boolean isExpired(String token) {
         try {
-            jwtParser.parse(token);
+            getJwtParser().parse(token);
             return false;
         } catch (ExpiredJwtException e) {
             return true;
@@ -75,11 +64,19 @@ public class JwtDecoder {
 
     private Claims getClaims(String token) {
         if (JwtType.SIG.equals(jwtType)) {
-            Jws<Claims> jws = jwtParser.parseSignedClaims(token);
-            return jws.getPayload();
+            return getJwtParser().parseSignedClaims(token).getPayload();
         } else {
-            Jwe<Claims> jwe = jwtParser.parseEncryptedClaims(token);
-            return jwe.getPayload();
+            return getJwtParser().parseEncryptedClaims(token).getPayload();
+        }
+    }
+
+    private JwtParser getJwtParser() {
+        if (JwtType.SIG.equals(this.jwtType)) {
+            RSAPublicKey publicKey = this.privateJwk.toPublicJwk().toKey();
+            return Jwts.parser().verifyWith(publicKey).build();
+        } else {
+            RSAPrivateKey privateKey = this.privateJwk.toKey();
+            return Jwts.parser().decryptWith(privateKey).build();
         }
     }
 }

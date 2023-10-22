@@ -3,14 +3,17 @@ package com.devtraining.systemdesign.jwt;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.Jwts.SIG;
 import io.jsonwebtoken.security.AeadAlgorithm;
 import io.jsonwebtoken.security.KeyAlgorithm;
+import io.jsonwebtoken.security.RsaPrivateJwk;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.interfaces.RSAPublicKey;
 import java.time.Duration;
 import java.util.Date;
 import java.util.Set;
-import javax.crypto.SecretKey;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
@@ -20,9 +23,7 @@ public class JwtEncoder {
     private final Duration refreshTokenTtl;
     private final String authoritiesKey;
     private final JwtType jwtType;
-    // private final SecretKey secretKey;
-    private final PublicKey publicKey;
-    private final PrivateKey privateKey;
+    private final RsaPrivateJwk privateJwk;
     private final KeyAlgorithm<PublicKey, PrivateKey> alg;
     private final AeadAlgorithm enc;
 
@@ -31,9 +32,7 @@ public class JwtEncoder {
         this.refreshTokenTtl = properties.getRefreshTokenTtl();
         this.authoritiesKey = properties.getAuthoritiesKey();
         this.jwtType = properties.getJwtType();
-        // this.secretKey = properties.getSecretKey();
-        this.publicKey = properties.getPublicKey();
-        this.privateKey = properties.getPrivateKey();
+        this.privateJwk = properties.getPrivateJwk();
         this.alg = properties.getAlg();
         this.enc = properties.getEnc();
     }
@@ -62,10 +61,17 @@ public class JwtEncoder {
         JwtBuilder jwtBuilder = Jwts.builder().claims(claims).issuedAt(now).expiration(new Date(expiration.toMillis()));
 
         if (JwtType.SIG.equals(this.jwtType)) {
-            // return jwtBuilder.signWith(this.secretKey).compact();
-            return jwtBuilder.signWith(this.privateKey).compact();
+            return jwtBuilder.signWith(getPrivateKey(), SIG.RS256).compact();
         } else {
-            return jwtBuilder.encryptWith(this.publicKey, this.alg, this.enc).compact();
+            return jwtBuilder.encryptWith(getPublicKey(), this.alg, this.enc).compact();
         }
+    }
+
+    private RSAPublicKey getPublicKey() {
+        return this.privateJwk.toPublicJwk().toKey();
+    }
+
+    private RSAPrivateKey getPrivateKey() {
+        return this.privateJwk.toKey();
     }
 }
