@@ -1,10 +1,10 @@
 package com.devtraining.systemdesign.apis;
 
-import com.devtraining.systemdesign.member.service.TokenInfo;
 import com.devtraining.systemdesign.member.service.AuthService;
 import com.devtraining.systemdesign.member.service.LoginRequest;
 import com.devtraining.systemdesign.member.service.ReissueRequest;
 import com.devtraining.systemdesign.member.service.SignupRequest;
+import com.devtraining.systemdesign.member.service.TokenInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;

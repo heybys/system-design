@@ -2,6 +2,7 @@ package com.devtraining.systemdesign.member.service;
 
 import com.devtraining.systemdesign.jwt.JwtDecoder;
 import com.devtraining.systemdesign.jwt.JwtEncoder;
+import com.devtraining.systemdesign.jwt.JwtProperties;
 import com.devtraining.systemdesign.member.domain.Authority;
 import com.devtraining.systemdesign.member.domain.Member;
 import com.devtraining.systemdesign.member.domain.MemberAuthority;
@@ -29,6 +30,7 @@ public class AuthService {
     private final String ADMIN_PASSWORD = "admin";
 
     private final PasswordEncoder passwordEncoder;
+    private final JwtProperties jwtProperties;
     private final JwtEncoder jwtEncoder;
     private final JwtDecoder jwtDecoder;
 
@@ -115,7 +117,7 @@ public class AuthService {
         refreshTokenRepository.save(RefreshToken.builder()
                 .key(username)
                 .value(refreshToken)
-                .ttl(jwtEncoder.getRefreshTokenTtl())
+                .ttl(jwtProperties.getRefreshTokenTtl())
                 .build());
 
         return new TokenInfo(accessToken, refreshToken);

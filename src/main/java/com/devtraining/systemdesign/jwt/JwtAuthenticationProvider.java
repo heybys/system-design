@@ -3,6 +3,7 @@ package com.devtraining.systemdesign.jwt;
 import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.security.authentication.AccountExpiredException;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -57,7 +58,10 @@ public class JwtAuthenticationProvider implements AuthenticationProvider, Initia
                 user = jwtDecoder.getUserDetails(accessToken);
             }
         } catch (JwtException | IllegalArgumentException e) {
-            log.debug("Failed to get username from '" + accessToken + "'");
+            log.debug(
+                    "[{}] Failed to get username from accessToken ({})",
+                    e.getClass().getSimpleName(),
+                    StringUtils.abbreviate(accessToken, 30));
             throw new BadCredentialsException("Invalid accessToken");
         }
 
