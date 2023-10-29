@@ -5,7 +5,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.cache.concurrent.ConcurrentMapCache;
 import org.springframework.security.authentication.AccountExpiredException;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -19,15 +18,15 @@ import org.springframework.security.core.authority.mapping.SimpleAuthorityMapper
 import org.springframework.security.core.userdetails.UserCache;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsChecker;
-import org.springframework.security.core.userdetails.cache.SpringCacheBasedUserCache;
+import org.springframework.security.core.userdetails.cache.NullUserCache;
 import org.springframework.util.Assert;
 
 @Slf4j
 @RequiredArgsConstructor
 public class JwtAuthenticationProvider implements AuthenticationProvider, InitializingBean {
 
-    private final UserCache userCache = new SpringCacheBasedUserCache(new ConcurrentMapCache("userCache"));
-    // private final UserCache userCache = new NullUserCache();
+    // private final UserCache userCache = new SpringCacheBasedUserCache(new ConcurrentMapCache("userCache"));
+    private final UserCache userCache = new NullUserCache();
 
     private final UserDetailsChecker preAuthenticationChecks = new DefaultPreAuthenticationChecks();
 
