@@ -47,7 +47,7 @@ public class SecurityConfig {
         AuthenticationManager authenticationManager = authenticationManager(http);
         AuthenticationFilter authenticationFilter = authenticationFilter(authenticationManager);
 
-        http.authorizeHttpRequests(auth -> auth.requestMatchers("/api/auth/**", "/error")
+        http.authorizeHttpRequests(auth -> auth.requestMatchers("/api/auth/**", "/error", "/actuator/**")
                         .permitAll()
                         .requestMatchers("/api/member/**")
                         .hasRole("ADMIN")
