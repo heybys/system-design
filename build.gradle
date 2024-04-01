@@ -26,7 +26,6 @@ dependencies {
 	// generic
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
-	implementation 'org.springframework.boot:spring-boot-starter-security'
 	// implementation 'org.springframework.boot:spring-boot-starter-undertow'
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 
@@ -42,9 +41,19 @@ dependencies {
 	// db migration
 	implementation 'org.liquibase:liquibase-core'
 
-	//  redis
+	// redis
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 	implementation 'org.springframework.session:spring-session-data-redis'
+
+	// security
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+	implementation 'org.springframework.security:spring-security-config'
+	implementation 'org.springframework.security:spring-security-oauth2-client'
+	implementation 'org.springframework.security:spring-security-oauth2-jose'
+	implementation 'org.springframework.security:spring-security-oauth2-resource-server'
+
+	// okta
+	implementation 'com.okta.spring:okta-spring-boot-starter:3.0.3'
 
 	// dev environment
 	developmentOnly 'org.springframework.boot:spring-boot-docker-compose'

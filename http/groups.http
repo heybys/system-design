@@ -1,0 +1,3 @@
+### Group 조회
+GET http://localhost:8080/api/groups
+Content-Type: application/json
